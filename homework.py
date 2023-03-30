@@ -41,11 +41,8 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """
-    Проверка наличия необходимых токенов при запуске
-    остановка выполнения программы при отсутствии
-    """
-
+    """Проверка наличия необходимых токенов при запуске
+    остановка выполнения программы при отсутствии."""
     if not (PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID):
         logging.critical('Отсутствует обязательный токен/токены. '
                          'Бот остановлен!')
@@ -53,8 +50,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """Отправка сообщений"""
-
+    """Отправка сообщений."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logging.debug(f'Успешно отправил сообщение - {message}')
@@ -66,8 +62,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Запрос результатов проверки ДЗ"""
-
+    """Запрос результатов проверки ДЗ."""
     payload = {'from_date': timestamp}
 
     try:
@@ -83,11 +78,8 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    """
-    Проверка, что полученный ответ, обладает
-    надлежащей структурой и содержанием
-    """
-
+    """Проверка, что полученный ответ, обладает
+    надлежащей структурой и содержанием."""
     if type(response) != dict:
         raise TypeError('Полученный ответ не является словарём!')
     elif 'homeworks' not in response:
@@ -102,11 +94,8 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """
-    Формирование строки ответа для Телеграм,
-    используя проверенный ответ API
-    """
-
+    """Формирование строки ответа для Телеграм,
+    используя проверенный ответ API."""
     if homework['status'] not in HOMEWORK_VERDICTS:
         raise ExceptionErrors(f'Неизвестный статус проверки '
                               f'домашнего задани {homework["status"]}')
@@ -120,11 +109,10 @@ def parse_status(homework):
 
 
 def main():
-    """"Этапы работы ПО телеграм-бота."""
-
+    """Этапы работы ПО телеграм-бота."""
     check_tokens()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    
+
     timestamp = int(time.time())
 
     while True:
