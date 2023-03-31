@@ -25,13 +25,12 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
+# Если перенести (т.е. убрать отсюда) константы в другой файл,
+# то выдает ошибки pytest - "... не удаляйте/изменяйте..."
 
-RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-
-message_list = []
-
+RETRY_PERIOD = 600
 
 HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -43,12 +42,8 @@ HOMEWORK_VERDICTS = {
 def check_tokens():
     """
     Проверка наличия необходимых токенов при запуске.
-    остановка выполнения программы при отсутствии.
     """
-    if not (PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID):
-        logging.critical('Отсутствует обязательный токен/токены. '
-                         'Бот остановлен!')
-        sys.exit()
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def send_message(bot, message):
@@ -68,15 +63,17 @@ def get_api_answer(timestamp):
     payload = {'from_date': timestamp}
 
     try:
-        response = requests.get(ENDPOINT, headers=HEADERS, params=payload)
-        if response.status_code != HTTPStatus.OK:
-            raise ExceptionErrors(f'Сервер не отвечает {response.status_code}')
-
-        response = response.json()
-        return response
+        response = requests.get(ENDPOINT, headers=HEADERS,
+                                params=payload)
 
     except Exception as error:
         raise ExceptionErrors(f'Другие ошибки с доступом {error}')
+
+    if response.status_code != HTTPStatus.OK:
+        raise ExceptionErrors(f'Сервер не отвечает {response.status_code}')
+
+    response = response.json()
+    return response
 
 
 def check_response(response):
@@ -102,6 +99,10 @@ def parse_status(homework):
     Формирование строки ответа для Телеграм,.
     используя проверенный ответ API.
     """
+    if not homework['status']:
+        raise ExceptionErrors('Нет сведений о статусе - '
+                              'отсутствует ключ [status]')
+
     if homework['status'] not in HOMEWORK_VERDICTS:
         raise ExceptionErrors(f'Неизвестный статус проверки '
                               f'домашнего задани {homework["status"]}')
@@ -116,7 +117,13 @@ def parse_status(homework):
 
 def main():
     """Этапы работы ПО телеграм-бота."""
-    check_tokens()
+    if not check_tokens():
+        logging.critical('Отсутствует обязательный токен/токены. '
+                         'Бот остановлен!')
+        sys.exit()
+
+    message_list = []
+
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
     timestamp = int(time.time())
