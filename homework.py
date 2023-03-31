@@ -40,9 +40,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """
-    Проверка наличия необходимых токенов при запуске.
-    """
+    """Проверка наличия необходимых токенов при запуске."""
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
