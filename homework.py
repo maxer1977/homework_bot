@@ -25,9 +25,6 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# Если перенести (т.е. убрать отсюда) константы в другой файл,
-# то выдает ошибки pytest - "... не удаляйте/изменяйте..."
-
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 RETRY_PERIOD = 600
@@ -86,7 +83,8 @@ def check_response(response):
     elif type(response['homeworks']) != list:
         raise TypeError('В элементе [homeworks] не содержится списка!')
     elif not response['homeworks']:
-        raise TypeError('В элементе homeworks пустой список!')
+        raise TypeError('Нет сведений о ДЗ - в элементе homeworks '
+                        'пустой список!')
     else:
         homework = response['homeworks'][0]
         return homework
@@ -97,7 +95,7 @@ def parse_status(homework):
     Формирование строки ответа для Телеграм,.
     используя проверенный ответ API.
     """
-    if not homework['status']:
+    if 'status' not in homework:
         raise ExceptionErrors('Нет сведений о статусе - '
                               'отсутствует ключ [status]')
 
